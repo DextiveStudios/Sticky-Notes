@@ -1,0 +1,306 @@
+import javax.swing.*;
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.nio.file.*;
+
+public class notesSticky {
+
+	public static class newSticky extends JFrame {
+		
+		public JTextArea noteText; //makes variable accessible to other parts of the code!
+	
+		public newSticky() { 
+			
+			noteText = new JTextArea();
+			setUndecorated(true);
+			getRootPane().setWindowDecorationStyle(JRootPane.PLAIN_DIALOG); //Changes the border of the frame.
+
+			setSize(300, 200);
+			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			setAlwaysOnTop(true);
+			setLayout(new BorderLayout());
+			setFocusable(true);
+			add(noteText);
+			setVisible(true);
+			
+			JPopupMenu popupMenu = new JPopupMenu(); //Makes a popup menu for JFrame.
+	
+			JMenuItem action = new JMenuItem("Yellow");
+			JMenuItem actionTwo = new JMenuItem("Blue");
+			JMenuItem actionThree = new JMenuItem("Red");
+			JMenuItem actionFour = new JMenuItem("White");
+			
+			ActionListener listener1 = new ActionListener() {
+			
+				public void actionPerformed(ActionEvent e) {
+						
+					noteText.setBackground(new Color(255, 236, 106));
+					System.out.println("Sticky is now yellow");
+					revalidate();
+					repaint();
+
+				}
+			};
+			
+			ActionListener listener2 = new ActionListener() {
+			
+				public void actionPerformed(ActionEvent e) {
+				
+					noteText.setBackground(new Color(183, 190, 250));
+					System.out.println("Sticky is now blue");
+					revalidate();
+					repaint();
+				
+				}
+			};
+				
+			ActionListener listener3 = new ActionListener() {
+					
+				public void actionPerformed(ActionEvent e) {
+						
+					noteText.setBackground(new Color(255, 106, 106));
+					System.out.println("Sticky is now red");
+					revalidate();
+					repaint();
+						
+				}	
+			};
+				
+			ActionListener listener4 = new ActionListener() {
+					
+				public void actionPerformed(ActionEvent e) {
+						
+					noteText.setBackground(Color.WHITE);
+					System.out.println("Sticky is now white");
+					revalidate();
+					repaint();
+				
+				}	
+			};
+			
+			action.addActionListener(listener1);
+			actionTwo.addActionListener(listener2);
+			actionThree.addActionListener(listener3);
+			actionFour.addActionListener(listener4);
+				
+			popupMenu.add(action);
+			popupMenu.add(actionTwo);
+			popupMenu.add(actionThree);
+			popupMenu.add(actionFour);
+			System.out.println("Actions added");
+			
+			MouseListener popupListener = new MouseAdapter() { //Makes a mouse listener
+				
+				public void mousePressed(MouseEvent e) {
+					
+					if (e.isPopupTrigger()) { //Checks if it's right mouse button
+						popupMenu.show(e.getComponent(), e.getX(), e.getY()); //shows the menu at the correct spot.
+					}
+				}
+				
+				public void mouseReleased(MouseEvent e) { //I assume this keeps the menu up after you release the mouse.
+					
+					if (e.isPopupTrigger()) {
+						
+						popupMenu.show(e.getComponent(), e.getX(), e.getY());
+						
+					}
+				}
+				
+			};
+			
+			addMouseListener(popupListener);
+			noteText.addMouseListener(popupListener); //These two lines add listener to both text field and frame.
+		}
+	}
+	
+	
+	public static void saveNote() { //Having methods not nested makes things more readable
+		
+		try{
+							
+			java.io.PrintWriter out = new java.io.PrintWriter("stickynotes.txt"); //This is a writer. It saves text. Other bits of data can be manually turned into text.
+					
+			for(newSticky Note : stickyNotes) {  
+						
+				Rectangle r = Note.getBounds(); //Gets the window
+				String text = Note.noteText.getText().replace("\n", "\\n"); //Gets the contents of the text area.
+								
+				out.println("NOTE");
+				out.println(r.x + "," + r.y + "," + r.width + "," + r.height); //Don't add extra white space, unless .trim(); will be called. This is the magic sauce that turns integers into string.
+				out.println(text);
+				out.println("End");
+						
+			}
+					
+			out.close();
+					
+			System.out.println("Document Saved!");
+					
+		}
+				
+		catch (IOException ex) {
+					
+			System.out.println("An error has occured: ");
+			ex.printStackTrace();
+					
+		}
+		
+	}
+	
+	public static void loadNote() {
+		
+		try{
+					
+					
+			Scanner scanRead = new Scanner(new java.io.File("stickynotes.txt")); //Makes the reader with a scanner. This checks the same file the writer made.
+					
+			while (scanRead.hasNextLine()) { 
+				String line = scanRead.nextLine();
+						
+				if (line.equals("NOTE")) { //Tells reader where to start.
+								
+					String[] parts = scanRead.nextLine().split(","); //Splits at saving's commas and makes an array of data.
+					int x = Integer.parseInt(parts[0]);
+					int y = Integer.parseInt(parts[1]);
+					int w = Integer.parseInt(parts[2]);
+					int h = Integer.parseInt(parts[3]);
+								
+					String text = scanRead.nextLine().replace("\\n", "\n"); //Contents of text area here.
+								
+					scanRead.nextLine(); //Skips "END"
+								
+					newSticky Note = new newSticky();
+					Note.setBounds(x, y, w, h); //Turns array into the windows' data.
+					Note.noteText.setText(text); //Puts the text in.
+					stickyNotes.add(Note); //Makes the notes with the data.
+								
+				}
+			}
+			scanRead.close();
+		}
+				
+		catch (IOException ex) {
+					
+			System.out.println("An error has occured: ");
+			ex.printStackTrace();
+					
+		}
+		
+	}
+	
+	public static java.util.List<newSticky> stickyNotes = new java.util.ArrayList<>();
+	
+	public static class stickyMake extends notesSticky {
+		
+		public static newSticky createNewSticky() {
+
+			TrayIcon trayIcon = null;
+			if (SystemTray.isSupported()) {
+				System.out.println("System is supported");
+				
+				SystemTray systemTray = SystemTray.getSystemTray();
+				Image image =
+				Toolkit.getDefaultToolkit().getImage("NotesIcon.png");
+				PopupMenu trayPopupMenu = new PopupMenu();
+				System.out.println("Variables done");
+				trayIcon = new TrayIcon(image, "Sticky Notes Menu", trayPopupMenu);
+				System.out.println("Icon added");
+	
+				MenuItem action = new MenuItem("New Note");
+				MenuItem actionTwo = new MenuItem("Close");
+				MenuItem actionThree = new MenuItem("Save");
+				MenuItem actionFour = new MenuItem("Load");
+			
+				ActionListener listener1 = new ActionListener() {
+			
+					public void actionPerformed(ActionEvent e) {
+				
+						newSticky Note = new newSticky();
+						
+						stickyNotes.add(Note);
+						System.out.println("Sticky note added to array list");
+				
+					}
+			
+				};
+			
+				ActionListener listener2 = new ActionListener() {
+			
+					public void actionPerformed(ActionEvent e) {
+				
+						System.exit(0);
+				
+					}
+			
+				};
+				
+				ActionListener listener3 = new ActionListener() {
+					
+					public void actionPerformed(ActionEvent e) {
+						
+						saveNote();
+						
+					}
+					
+				};
+				
+				ActionListener listener4 = new ActionListener() {
+					
+					public void actionPerformed(ActionEvent e) {
+						
+						loadNote();
+				
+					
+					}
+					
+				};
+			
+				action.addActionListener(listener1);
+				actionTwo.addActionListener(listener2);
+				actionThree.addActionListener(listener3);
+				actionFour.addActionListener(listener4);
+				
+				trayPopupMenu.add(action);
+				trayPopupMenu.add(actionTwo);
+				trayPopupMenu.add(actionThree);
+				trayPopupMenu.add(actionFour);
+				System.out.println("Actions added");
+			
+				try {
+					systemTray.add(trayIcon);
+					System.out.println("Icon now in tray");
+				}
+				catch (AWTException b) {
+					System.err.println(b);
+				}
+			} else {
+				JOptionPane.showMessageDialog(null, "System tray not supported!", "The sticky notes find your system tray too slippery.", JOptionPane.ERROR_MESSAGE);
+			}
+			return null;
+		}
+	}
+
+	public static void main(String[] args) {
+	
+		stickyMake.createNewSticky();
+		
+		int delay = 60000;
+			
+		javax.swing.Timer timer = new javax.swing.Timer(delay, e -> {
+
+			saveNote();
+			System.out.println("Document auto saved");
+				
+		});
+			
+		timer.setRepeats(true);
+			
+		timer.start(); //The timer can be written in one line.
+		
+	}
+
+
+}
