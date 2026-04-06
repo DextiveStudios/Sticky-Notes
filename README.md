@@ -8,7 +8,7 @@ A little sticky notes app made for Java learning.
 - Autosaves once a minute
 
   # How to use
-  - Put it in a file, so to have everything, such as the txt file the program saves to/loads from, in one place.
+  - Put it in a file, so to have everything in one place. The icon is called through a relative path, so it's important to ensure the computer can find it!
   - Compile and run with commmand prompt
  
   # License
